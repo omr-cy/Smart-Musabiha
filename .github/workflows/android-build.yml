@@ -36,23 +36,23 @@ jobs:
           fi
           npx cap sync android
         
-      - name: Debug Android Directory
-        run: ls -R android
-        
-      - name: Remove Corrupt Wrapper
-        run: rm -f android/gradle/wrapper/gradle-wrapper.jar
+      - name: Regenerate Gradle Wrapper
+        run: |
+          cd android
+          rm -f gradle/wrapper/gradle-wrapper.jar
+          gradle wrapper --gradle-version 8.5
+          chmod +x gradlew
         
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: 8.5
-          validate-wrappers: false
+          gradle-version: wrapper
           build-root-directory: android
 
       - name: Build with Gradle
         run: |
           cd android
-          gradle assembleDebug --stacktrace
+          ./gradlew assembleDebug --stacktrace --info
         
       - name: Upload APK
         uses: actions/upload-artifact@v4
