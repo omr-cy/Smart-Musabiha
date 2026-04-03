@@ -34,6 +34,10 @@ jobs:
           if [ ! -d "android" ]; then
             npx cap add android
           fi
+          npx cap sync android
+        
+      - name: Debug Android Directory
+        run: ls -R android
         
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
