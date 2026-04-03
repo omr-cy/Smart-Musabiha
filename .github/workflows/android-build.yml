@@ -38,6 +38,10 @@ jobs:
       - name: Set Permissions
         run: chmod +x android/gradlew
           
+      - name: Fix Gradle Wrapper
+        working-directory: android
+        run: ./gradlew wrapper --gradle-version 8.0
+          
       - name: Sync Capacitor
         run: npx cap sync android
         
