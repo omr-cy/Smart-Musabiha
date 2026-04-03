@@ -1,0 +1,6 @@
+{
+	"appId": "com.smart.voice.tasbeeh",
+	"appName": "Smart Voice Tasbeeh",
+	"webDir": "dist",
+	"bundledWebRuntime": false
+}

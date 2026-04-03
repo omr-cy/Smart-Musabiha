@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import 'regenerator-runtime/runtime';
 import { motion, AnimatePresence } from 'motion/react';
 import { createModel } from 'vosk-browser';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem } from '@capacitor/filesystem';
 import { 
   Mic, 
   Settings, 
@@ -44,6 +46,7 @@ export default function App() {
     return (saved as RecognitionMode) || 'auto';
   });
   const [activeEngine, setActiveEngine] = useState<'google' | 'vosk' | null>(null);
+  const [isNative] = useState(() => Capacitor.isNativePlatform());
   const wakeLockRef = useRef<any>(null);
   const [debugInfo, setDebugInfo] = useState({
     status: 'متوقف',
@@ -118,6 +121,11 @@ export default function App() {
     
     // Remove non-Arabic characters
     n = n.replace(/[^\u0621-\u064A\s]/g, ' ');
+    
+    // Handle common Arabic ASR misrecognitions:
+    // 1. Remove spaces after 'ال' (Al-) prefix
+    n = n.replace(/(^|\s)ال\s+/g, '$1ال');
+    
     // Collapse spaces
     n = n.replace(/\s+/g, ' ').trim();
     
@@ -194,9 +202,14 @@ export default function App() {
         const normKw = normalizeArabic(kw);
         if (!normKw || normKw.length < 2) return;
 
-        // Use word boundaries simulation for Arabic
+        // Escape regex special characters
         const escapedKw = normKw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(^|\\s)${escapedKw}(\\s|$)`, 'g');
+        
+        // Make spaces optional to handle merged words (e.g., "الحمد لله" matches "الحمدلله")
+        const flexibleKw = escapedKw.replace(/\s+/g, '\\s*');
+        
+        // Use word boundaries simulation for Arabic
+        const regex = new RegExp(`(^|\\s)${flexibleKw}(\\s|$)`, 'g');
         
         const matches = (normalized.match(regex) || []).length;
         if (matches > maxMatchesInCurrent) maxMatchesInCurrent = matches;
@@ -315,6 +328,22 @@ export default function App() {
   const initVoskModel = useCallback(async () => {
     if (modelReady || modelLoading) return;
     
+    // Check storage permission if on native platform
+    if (isNative) {
+      try {
+        const check = await Filesystem.checkPermissions();
+        if (check.publicStorage !== 'granted') {
+          const request = await Filesystem.requestPermissions();
+          if (request.publicStorage !== 'granted') {
+            addToLog('⚠️ محرك "بدون إنترنت" يحتاج لإذن التخزين للعمل');
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Storage permission error:', e);
+      }
+    }
+
     // Create new abort controller
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
@@ -383,7 +412,13 @@ export default function App() {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         streamRef.current = stream;
         const source = audioContextRef.current.createMediaStreamSource(stream);
-        const recognizer = new modelRef.current.KaldiRecognizer(audioContextRef.current.sampleRate);
+        
+        // Build a grammar from all dhikr keywords to improve accuracy and reduce false positives
+        const allKeywords = dhikrsRef.current.flatMap(d => [d.text, ...d.keywords]);
+        const uniqueWords = Array.from(new Set(allKeywords.flatMap(k => k.split(/\s+/))));
+        const grammar = JSON.stringify([...allKeywords, ...uniqueWords, "[unk]"]);
+        
+        const recognizer = new modelRef.current.KaldiRecognizer(audioContextRef.current.sampleRate, grammar);
         recognizerRef.current = recognizer;
         
         recognizer.on('result', (message: any) => {
@@ -510,6 +545,20 @@ export default function App() {
       }
       if (navigator.vibrate) navigator.vibrate(50);
     } else {
+      // Check native permissions if on mobile
+      if (isNative) {
+        try {
+          // On Android/iOS, we need to ensure microphone permission is granted
+          // navigator.mediaDevices.getUserMedia will trigger the native prompt
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach(track => track.stop());
+        } catch (err) {
+          console.error('Native permission error:', err);
+          setShowPermissionError(true);
+          return;
+        }
+      }
+
       // Try to acquire wake lock
       if ('wakeLock' in navigator) {
         try {
