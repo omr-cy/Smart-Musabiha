@@ -1,0 +1,5 @@
+{
+  "name": "Smart Voice Tasbeeh",
+  "description": "A smart tasbeeh application with voice recognition to count dhikr automatically.",
+  "requestFramePermissions": ["microphone"]
+}
