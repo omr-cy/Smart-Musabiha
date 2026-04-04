@@ -7,7 +7,7 @@
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "assets:generate": "npx @capacitor/assets generate --android",
-    "build:android": "npm run build && npm run assets:generate && npx cap sync android && cd android && ./gradlew clean assembleRelease",
+    "build:android": "npm run build && npm run assets:generate && npx cap sync android && cd android && ./gradlew clean assembleDebug",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
