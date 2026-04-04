@@ -916,18 +916,15 @@ export default function App() {
                     {[
                       { id: 'auto', label: 'تلقائي (ذكي)', icon: Zap, desc: 'يستخدم محرك الإنترنت عند توفره، والمحرك المحلي عند انقطاعه' },
                       { id: 'google', label: 'بإنترنت', icon: Wifi, desc: 'دقة عالية جداً، يحتاج إنترنت مستمر' },
-                      { id: 'vosk', label: 'بدون إنترنت (تحت الصيانة)', icon: WifiOff, desc: 'يعمل بدون إنترنت تماماً، يحتاج تحميل موديل' },
+                      { id: 'vosk', label: 'بدون إنترنت', icon: WifiOff, desc: 'يعمل بدون إنترنت تماماً، يحتاج تحميل موديل' },
                     ].map((mode) => (
                       <button
                         key={mode.id}
                         onClick={() => setRecognitionMode(mode.id as RecognitionMode)}
-                        disabled={mode.id === 'vosk'}
                         className={`flex items-start gap-3 p-3 rounded-xl border transition-all text-right ${
-                          mode.id === 'vosk' 
-                            ? 'opacity-50 cursor-not-allowed bg-gray-800 border-transparent text-gray-500'
-                            : recognitionMode === mode.id 
-                              ? 'bg-gold/10 border-gold text-gold' 
-                              : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
+                          recognitionMode === mode.id 
+                            ? 'bg-gold/10 border-gold text-gold' 
+                            : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
                         }`}
                       >
                         <mode.icon size={20} className="mt-1 shrink-0" />
