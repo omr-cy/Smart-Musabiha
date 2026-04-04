@@ -29,6 +29,9 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           
+      - name: Generate Android Assets
+        run: npx @capacitor/assets generate --android
+
       - name: Install Android Platform
         run: |
           if [ ! -d "android" ]; then
