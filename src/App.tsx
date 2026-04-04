@@ -683,7 +683,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white font-sans flex flex-col p-6 dir-rtl" dir="rtl">
+    <div className="min-h-screen bg-dark-bg text-white font-sans flex flex-col p-6 dir-rtl pb-[calc(env(safe-area-inset-bottom)+24px)]" dir="rtl">
       <header className="flex items-center justify-between gap-4 mb-10">
         <div className="flex-1 flex justify-start">
           {developerMode && (
@@ -806,7 +806,7 @@ export default function App() {
         ))}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-8 flex justify-between items-center bg-gradient-to-t from-dark-bg via-dark-bg/90 to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 p-8 pb-[calc(env(safe-area-inset-bottom)+32px)] flex justify-between items-center bg-gradient-to-t from-dark-bg via-dark-bg/90 to-transparent">
         <button 
           onClick={() => setShowCustomization(true)}
           className="w-14 h-14 bg-card-bg rounded-2xl flex items-center justify-center border border-white/10 text-gray-400 hover:text-white transition-all"

@@ -30,6 +30,7 @@ jobs:
           java-version: '21'
           
       - name: Generate Android Assets
+        # Generates icons and splash screens
         run: npx @capacitor/assets generate --android
 
       - name: Sync Android
