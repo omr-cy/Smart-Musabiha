@@ -640,6 +640,11 @@ export default function App() {
     if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
   };
 
+  const handleResetSingle = (id: string) => {
+    setDhikrs(prev => prev.map(d => d.id === id ? { ...d, count: 0 } : d));
+    if (navigator.vibrate) navigator.vibrate(50);
+  };
+
   const deleteDhikr = (id: string) => {
     setDhikrs(prev => prev.filter(d => d.id !== id));
   };
@@ -780,7 +785,7 @@ export default function App() {
 
       <div className="grid grid-cols-2 gap-4 flex-1 overflow-y-auto pb-32">
         {dhikrs.map((dhikr) => (
-          <motion.button
+          <motion.div
             key={dhikr.id}
             animate={{ 
               scale: (dhikr as any).lastIncrement && (Date.now() - (dhikr as any).lastIncrement < 300) ? [1, 1.1, 1] : 1
@@ -794,15 +799,25 @@ export default function App() {
               setShowCustomization(true);
             }}
             onClick={() => handleIncrement(dhikr.id)}
-            className="bg-card-bg rounded-3xl p-6 flex flex-col items-center justify-center border border-white/5 relative group h-48"
+            className="bg-card-bg rounded-3xl p-6 flex flex-col items-center justify-center border border-white/5 relative group h-48 cursor-pointer"
           >
             <div className="absolute top-4 right-4 w-2 h-2 rounded-full" style={{ backgroundColor: dhikr.color }} />
             <p className="text-4xl font-bold mb-4" style={{ color: dhikr.color }}>{formatNumber(dhikr.count)}</p>
             <p className="text-lg font-medium text-gray-300">{dhikr.text}</p>
-            <div className="absolute bottom-4 text-[10px] text-gray-500">
+            <div className="absolute bottom-4 right-0 w-full text-center text-[10px] text-gray-500">
               {formatNumber(dhikr.count)} / {formatNumber(dhikr.target)}
             </div>
-          </motion.button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleResetSingle(dhikr.id);
+              }}
+              className="absolute bottom-3 left-3 p-2 text-gray-500 hover:text-red-400 bg-white/5 hover:bg-red-500/10 rounded-xl transition-all"
+              title="تصفير هذا الذكر"
+            >
+              <RotateCcw size={14} />
+            </button>
+          </motion.div>
         ))}
       </div>
 
