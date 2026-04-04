@@ -55,7 +55,7 @@ export default function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [recognitionMode, setRecognitionMode] = useState<RecognitionMode>(() => {
     const saved = localStorage.getItem('recognitionMode');
-    return (saved as RecognitionMode) || 'auto';
+    return (saved === 'vosk' ? 'auto' : (saved as RecognitionMode)) || 'auto';
   });
   const [activeEngine, setActiveEngine] = useState<'google' | 'vosk' | null>(null);
   const [isNative] = useState(() => Capacitor.isNativePlatform());
@@ -506,8 +506,8 @@ export default function App() {
 
     const determineEngine = () => {
       if (recognitionMode === 'google') return 'google';
-      if (recognitionMode === 'vosk') return 'vosk';
-      return isOnline ? 'google' : 'vosk';
+      // 'vosk' is disabled, so we fallback to 'google'
+      return 'google';
     };
 
     const targetEngine = determineEngine();
@@ -916,16 +916,17 @@ export default function App() {
                     {[
                       { id: 'auto', label: 'تلقائي (ذكي)', icon: Zap, desc: 'يستخدم محرك الإنترنت عند توفره، والمحرك المحلي عند انقطاعه' },
                       { id: 'google', label: 'بإنترنت', icon: Wifi, desc: 'دقة عالية جداً، يحتاج إنترنت مستمر' },
-                      { id: 'vosk', label: 'بدون إنترنت', icon: WifiOff, desc: 'يعمل بدون إنترنت تماماً، يحتاج تحميل موديل' },
+                      { id: 'vosk', label: 'تحت الصيانة', icon: WifiOff, desc: 'يعمل بدون إنترنت تماماً، يحتاج تحميل موديل', disabled: true },
                     ].map((mode) => (
                       <button
                         key={mode.id}
+                        disabled={mode.disabled}
                         onClick={() => setRecognitionMode(mode.id as RecognitionMode)}
                         className={`flex items-start gap-3 p-3 rounded-xl border transition-all text-right ${
                           recognitionMode === mode.id 
                             ? 'bg-gold/10 border-gold text-gold' 
                             : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
-                        }`}
+                        } ${mode.disabled ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                       >
                         <mode.icon size={20} className="mt-1 shrink-0" />
                         <div>
