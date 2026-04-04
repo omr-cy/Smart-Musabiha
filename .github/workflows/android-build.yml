@@ -35,6 +35,13 @@ jobs:
       - name: Sync Android
         run: npx cap sync android
 
+      - name: Regenerate Gradle Wrapper
+        run: |
+          cd android
+          rm -f gradle/wrapper/gradle-wrapper.jar
+          gradle wrapper --gradle-version 8.13
+          chmod +x gradlew
+
       - name: Clean Android Build
         run: |
           cd android
