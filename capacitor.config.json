@@ -2,12 +2,14 @@
   "appId": "com.smart.voice.tasbeeh",
   "appName": "المسبحة الصوتية الذكية",
   "webDir": "dist",
-  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 2000,
+      "launchShowDuration": 3000,
       "launchAutoHide": true,
-      "backgroundColor": "#111827",
+      "backgroundColor": "#ffffff",
       "androidSplashResourceName": "splash",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,
