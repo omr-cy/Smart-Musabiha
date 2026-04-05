@@ -536,7 +536,7 @@ export default function App() {
 
   useEffect(() => {
     if (isNative) {
-      if (isListening && activeEngine === 'google') {
+      if (isListening) {
         AudioMute.mute().catch(console.error);
       } else {
         AudioMute.unmute().catch(console.error);
@@ -547,7 +547,7 @@ export default function App() {
         AudioMute.unmute().catch(console.error);
       }
     };
-  }, [isListening, activeEngine, isNative]);
+  }, [isListening, isNative]);
 
   // Keep-alive check
   useEffect(() => {
