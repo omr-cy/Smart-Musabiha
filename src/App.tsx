@@ -46,6 +46,7 @@ export default function App() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showPermissionError, setShowPermissionError] = useState(false);
   const [editingDhikr, setEditingDhikr] = useState<Dhikr | null>(null);
+  const [editingSource, setEditingSource] = useState<'settings' | 'main' | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
   const [developerMode, setDeveloperMode] = useState(() => localStorage.getItem('developerMode') === 'true');
@@ -697,6 +698,7 @@ export default function App() {
 
   const startAddDhikr = () => {
     setIsAddingNew(true);
+    setEditingSource('settings');
     setEditingDhikr({
       id: Date.now().toString(),
       text: '',
@@ -731,38 +733,31 @@ export default function App() {
     else setDhikrs(prev => prev.map(d => d.id === finalDhikr.id ? finalDhikr : d));
     setEditingDhikr(null);
     setIsAddingNew(false);
+    if (editingSource === 'settings') setShowCustomization(false);
+    setEditingSource(null);
   };
 
   return (
     <div className="min-h-screen bg-dark-bg text-white font-sans flex flex-col p-6 dir-rtl" dir="rtl">
-      <header className="flex items-center justify-between gap-4 mb-10">
+      <header className="sticky top-0 z-50 bg-dark-bg/90 backdrop-blur-md flex items-center justify-between gap-4 py-4 -mx-6 px-6 mb-10">
         <div className="flex-1 flex justify-start">
-          {developerMode && (
-            <button 
-              onClick={() => setShowDebug(!showDebug)}
-              className={`w-12 h-12 rounded-2xl transition-all flex items-center justify-center border ${
-                showDebug 
-                  ? 'bg-gold text-dark-bg border-gold shadow-lg shadow-gold/20' 
-                  : 'bg-card-bg/40 text-gray-500 border-white/5 hover:bg-white/5'
-              }`}
-            >
-              <Eye size={20} />
-            </button>
-          )}
+          <button className="w-10 h-10 bg-card-bg/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/5 text-white text-[10px] font-bold hover:bg-white/10 transition-all">
+            ادعمنا
+          </button>
         </div>
         
-        <div className="bg-card-bg/40 px-5 py-2.5 rounded-2xl border border-white/5 backdrop-blur-md shadow-xl">
-          <h1 className="text-gold text-lg md:text-xl font-black tracking-tight text-center leading-tight">
-            المسبحة الصوتية <span className="text-white/90 font-medium block text-[10px] mt-1 tracking-[0.2em] uppercase opacity-60">الذكية</span>
+        <div className="bg-card-bg/40 px-5 py-2.5 rounded-xl border border-white/5 backdrop-blur-md shadow-lg">
+          <h1 className="text-gold text-xs font-bold tracking-tight text-center leading-tight">
+            المسبحة الصوتية الذكية
           </h1>
         </div>
 
         <div className="flex-1 flex justify-end">
           <button 
             onClick={() => setShowSettings(true)}
-            className="w-12 h-12 bg-card-bg/40 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/5 text-gray-400 hover:bg-white/5 transition-all hover:text-white"
+            className="w-10 h-10 bg-card-bg/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/5 text-gray-400 hover:bg-white/5 transition-all hover:text-white"
           >
-            <Settings size={20} />
+            <Settings size={18} />
           </button>
         </div>
       </header>
@@ -841,8 +836,8 @@ export default function App() {
             onContextMenu={(e) => {
               e.preventDefault();
               setIsAddingNew(false);
+              setEditingSource('main');
               setEditingDhikr(dhikr);
-              setShowCustomization(true);
             }}
             onClick={() => handleIncrement(dhikr.id)}
             className="bg-card-bg rounded-3xl p-6 flex flex-col items-center justify-center border border-white/5 relative group h-48 cursor-pointer"
@@ -1051,6 +1046,8 @@ export default function App() {
                         if (recognitionMode === 'vosk') {
                           setRecognitionMode('auto');
                         }
+                      } else {
+                        setShowDebug(true);
                       }
                     }}
                     className={`w-12 h-6 rounded-full transition-colors relative ${developerMode ? 'bg-gold' : 'bg-gray-700'}`}
@@ -1100,7 +1097,7 @@ export default function App() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => { setIsAddingNew(false); setEditingDhikr(dhikr); }} className="p-2 text-gray-400 hover:text-white">
+                      <button onClick={() => { setIsAddingNew(false); setEditingSource('settings'); setEditingDhikr(dhikr); }} className="p-2 text-gray-400 hover:text-white">
                         <Edit3 size={18} />
                       </button>
                       <button onClick={() => deleteDhikr(dhikr.id)} className="p-2 text-red-400 hover:text-red-300">
@@ -1126,13 +1123,13 @@ export default function App() {
       <AnimatePresence>
         {editingDhikr && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setEditingDhikr(null); setIsAddingNew(false); }} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { if (editingSource === 'settings') setShowCustomization(false); setEditingDhikr(null); setIsAddingNew(false); setEditingSource(null); }} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-card-bg p-8 rounded-[32px] w-full max-w-md relative z-10 border border-white/10">
               <h3 className="text-xl font-bold mb-6 text-center">{isAddingNew ? 'إضافة ذكر جديد' : 'تعديل الذكر'}</h3>
               <div className="space-y-6">
                 <div>
                   <label className="text-xs text-gray-500 block mb-2">النص (مثال: سبحان الله)</label>
-                  <input type="text" placeholder="اكتب الذكر هنا..." value={editingDhikr.text} onChange={(e) => setEditingDhikr({...editingDhikr, text: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-center text-lg focus:outline-none focus:border-gold" autoFocus />
+                  <input type="text" placeholder="اكتب الذكر هنا..." value={editingDhikr.text} onChange={(e) => setEditingDhikr({...editingDhikr, text: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-center text-lg focus:outline-none focus:border-gold" />
                 </div>
                 <div>
                   <label className="text-xs text-gray-500 block mb-2">الهدف</label>
@@ -1148,7 +1145,7 @@ export default function App() {
                 </div>
                 <div className="flex gap-4 pt-4">
                   <button onClick={saveDhikr} disabled={!editingDhikr.text.trim()} className={`flex-1 font-bold py-4 rounded-2xl transition-colors ${editingDhikr.text.trim() ? 'bg-gold text-dark-bg' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}>حفظ</button>
-                  <button onClick={() => { setEditingDhikr(null); setIsAddingNew(false); }} className="flex-1 bg-white/5 font-bold py-4 rounded-2xl">إلغاء</button>
+                  <button onClick={() => { if (editingSource === 'settings') setShowCustomization(false); setEditingDhikr(null); setIsAddingNew(false); setEditingSource(null); }} className="flex-1 bg-white/5 font-bold py-4 rounded-2xl">إلغاء</button>
                 </div>
               </div>
             </motion.div>
