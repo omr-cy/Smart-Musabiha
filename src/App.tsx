@@ -21,10 +21,7 @@ import {
   Loader2,
   Wifi,
   WifiOff,
-  Zap,
-  Moon,
-  Sun,
-  Monitor
+  Zap
 } from 'lucide-react';
 import { Dhikr, INITIAL_DHIKRS, RecognitionMode } from './types';
 
@@ -63,32 +60,6 @@ export default function App() {
     const saved = localStorage.getItem('recognitionMode');
     return (saved as RecognitionMode) || 'auto';
   });
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
-    return (localStorage.getItem('theme') as any) || 'system';
-  });
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    const applyTheme = (t: string) => {
-      root.classList.remove('light', 'dark');
-      if (t === 'system') {
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        if (systemTheme === 'light') root.classList.add('light');
-      } else if (t === 'light') {
-        root.classList.add('light');
-      }
-    };
-
-    applyTheme(theme);
-    localStorage.setItem('theme', theme);
-
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => applyTheme('system');
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-  }, [theme]);
   const [activeEngine, setActiveEngine] = useState<'google' | 'vosk' | null>(null);
   const [isNative] = useState(() => Capacitor.isNativePlatform());
   const wakeLockRef = useRef<any>(null);
@@ -738,13 +709,6 @@ export default function App() {
     });
   };
 
-  const cycleTheme = () => {
-    const modes: Theme[] = ['light', 'dark', 'system'];
-    const currentIndex = modes.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % modes.length;
-    setTheme(modes[nextIndex]);
-  };
-
   const saveDhikr = () => {
     if (!editingDhikr || !editingDhikr.text.trim()) return;
     
@@ -769,19 +733,20 @@ export default function App() {
     else setDhikrs(prev => prev.map(d => d.id === finalDhikr.id ? finalDhikr : d));
     setEditingDhikr(null);
     setIsAddingNew(false);
+    if (editingSource === 'settings') setShowCustomization(false);
     setEditingSource(null);
   };
 
   return (
-    <div className="min-h-screen bg-app-bg text-app-text font-sans flex flex-col p-6 pb-[calc(8rem+env(safe-area-inset-bottom))] dir-rtl" dir="rtl">
-      <header className="sticky top-0 z-50 bg-app-bg/90 backdrop-blur-md flex items-center justify-between gap-4 py-4 -mx-6 px-6 mb-10">
+    <div className="min-h-screen bg-dark-bg text-white font-sans flex flex-col p-6 dir-rtl" dir="rtl">
+      <header className="flex items-center justify-between gap-4 mb-10">
         <div className="flex-1 flex justify-start">
-          <button className="w-10 h-10 bg-app-card/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-app-border text-app-text text-[10px] font-bold hover:bg-app-card/60 transition-all">
+          <button className="w-10 h-10 bg-card-bg/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/5 text-gold text-[10px] font-bold hover:bg-gold/10 transition-all">
             ادعمنا
           </button>
         </div>
         
-        <div className="bg-app-card/40 px-7 py-3.5 rounded-xl border border-app-border backdrop-blur-md shadow-lg">
+        <div className="bg-card-bg/40 px-3 py-1.5 rounded-xl border border-white/5 backdrop-blur-md shadow-lg">
           <h1 className="text-gold text-xs font-bold tracking-tight text-center leading-tight">
             المسبحة الصوتية الذكية
           </h1>
@@ -790,8 +755,7 @@ export default function App() {
         <div className="flex-1 flex justify-end">
           <button 
             onClick={() => setShowSettings(true)}
-            className="w-10 h-10 bg-app-card/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-app-border text-gray-400 hover:bg-app-card/60 transition-all hover:text-app-text"
-            title="الإعدادات"
+            className="w-10 h-10 bg-card-bg/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/5 text-gray-400 hover:bg-white/5 transition-all hover:text-white"
           >
             <Settings size={18} />
           </button>
@@ -801,7 +765,7 @@ export default function App() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-b from-app-card to-app-bg/40 rounded-3xl p-8 mb-8 text-center border border-app-border dhikr-card-shadow relative overflow-hidden"
+        className="bg-gradient-to-b from-card-bg to-black/40 rounded-3xl p-8 mb-8 text-center border border-white/5 dhikr-card-shadow relative overflow-hidden"
       >
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-gold/30 rounded-full blur-sm" />
         <p className="text-gray-400 text-sm mb-2">مجموع التسبيح</p>
@@ -837,13 +801,13 @@ export default function App() {
                 <div className="flex gap-2 mt-2">
                   <button 
                     onClick={(e) => { e.stopPropagation(); testMicrophone(); }}
-                    className="flex-1 bg-app-card/60 px-2 py-1 rounded text-[8px] hover:bg-app-card/80"
+                    className="flex-1 bg-white/10 px-2 py-1 rounded text-[8px] hover:bg-white/20"
                   >
                     اختبار الميكروفون
                   </button>
                   <button 
                     onClick={(e) => { e.stopPropagation(); setDebugLog([]); }}
-                    className="bg-app-card/60 px-2 py-1 rounded text-[8px] hover:bg-app-card/80"
+                    className="bg-white/10 px-2 py-1 rounded text-[8px] hover:bg-white/20"
                   >
                     مسح السجل
                   </button>
@@ -876,14 +840,14 @@ export default function App() {
               setEditingDhikr(dhikr);
             }}
             onClick={() => handleIncrement(dhikr.id)}
-            className="bg-app-card rounded-3xl p-6 flex flex-col items-center justify-center border border-app-border relative group h-48 cursor-pointer"
+            className="bg-card-bg rounded-3xl p-6 flex flex-col items-center justify-center border border-white/5 relative group h-48 cursor-pointer"
           >
             <div className="absolute top-4 right-4 w-2 h-2 rounded-full" style={{ backgroundColor: dhikr.color }} />
             <div className="h-14 flex items-end justify-center pb-2">
               <p className="text-4xl font-bold leading-none" style={{ color: dhikr.color }}>{formatNumber(dhikr.count)}</p>
             </div>
             <div className="h-16 flex items-start justify-center w-full pt-2">
-              <p className={`font-bold text-gray-300 text-center px-2 leading-snug line-clamp-3 ${
+              <p className={`font-medium text-gray-300 text-center px-2 leading-snug line-clamp-3 ${
                 dhikr.text.length <= 15 ? 'text-xs' : 
                 dhikr.text.length <= 30 ? 'text-[11px]' : 
                 dhikr.text.length <= 50 ? 'text-[9px]' : 'text-[7px]'
@@ -897,7 +861,7 @@ export default function App() {
                 e.stopPropagation();
                 handleResetSingle(dhikr.id);
               }}
-              className="absolute bottom-3 left-3 p-2 text-gray-500 hover:text-red-400 bg-app-card/40 hover:bg-red-500/10 rounded-xl transition-all"
+              className="absolute bottom-3 left-3 p-2 text-gray-500 hover:text-red-400 bg-white/5 hover:bg-red-500/10 rounded-xl transition-all"
               title="تصفير هذا الذكر"
             >
               <RotateCcw size={14} />
@@ -906,10 +870,10 @@ export default function App() {
         ))}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-8 pb-[calc(4rem+env(safe-area-inset-bottom))] flex justify-between items-center bg-gradient-to-t from-app-bg via-app-bg/90 to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 p-8 pb-16 flex justify-between items-center bg-gradient-to-t from-dark-bg via-dark-bg/90 to-transparent">
         <button 
           onClick={() => setShowCustomization(true)}
-          className="w-14 h-14 bg-app-card rounded-2xl flex items-center justify-center border border-app-border text-gray-400 hover:text-app-text transition-all"
+          className="w-14 h-14 bg-card-bg rounded-2xl flex items-center justify-center border border-white/10 text-gray-400 hover:text-white transition-all"
           title="تخصيص الأذكار"
         >
           <Edit3 size={24} />
@@ -946,7 +910,7 @@ export default function App() {
                     key={i}
                     animate={{ height: ["10px", "30px", "10px"] }}
                     transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.1 }}
-                    className="w-1 bg-app-bg rounded-full"
+                    className="w-1 bg-dark-bg rounded-full"
                   />
                 ))}
               </div>
@@ -976,10 +940,9 @@ export default function App() {
 
         <button 
           onClick={() => setShowResetConfirm(true)}
-          className="w-14 h-14 bg-app-card rounded-2xl flex items-center justify-center border border-app-border text-gray-400 hover:text-app-text transition-all"
-          title="تصفير العدادات"
+          className="w-14 h-14 bg-card-bg rounded-2xl flex items-center justify-center border border-white/10"
         >
-          <RotateCcw size={24} />
+          <RotateCcw className="text-gray-400" size={24} />
         </button>
       </div>
 
@@ -991,52 +954,25 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowSettings(false)}
-              className="fixed inset-0 bg-app-bg/60 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             />
             <motion.div 
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              className="fixed bottom-0 left-0 right-0 bg-app-card rounded-t-[40px] z-50 p-8 max-h-[80vh] overflow-y-auto border-t border-app-border"
+              className="fixed bottom-0 left-0 right-0 bg-card-bg rounded-t-[40px] z-50 p-8 max-h-[80vh] overflow-y-auto border-t border-white/10"
             >
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-xl font-bold">الإعدادات العامة</h2>
-                <button onClick={() => setShowSettings(false)} className="p-2 bg-app-card/40 rounded-full">
+                <button onClick={() => setShowSettings(false)} className="p-2 bg-white/5 rounded-full">
                   <X size={20} />
                 </button>
               </div>
 
               <div className="space-y-6">
-                <div className="bg-app-card/40 p-4 rounded-2xl border border-app-border space-y-4">
-                  <h3 className="text-app-text font-medium flex items-center gap-2">
-                    <Sun size={18} className="text-gold" />
-                    مظهر التطبيق
-                  </h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'light', label: 'فاتح', icon: Sun },
-                      { id: 'dark', label: 'داكن', icon: Moon },
-                      { id: 'system', label: 'تلقائي', icon: Monitor },
-                    ].map((t) => (
-                      <button
-                        key={t.id}
-                        onClick={() => setTheme(t.id as any)}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
-                          theme === t.id 
-                            ? 'bg-gold/10 border-gold text-gold' 
-                            : 'bg-app-card/40 border-transparent text-gray-400 hover:bg-app-card/60'
-                        }`}
-                      >
-                        <t.icon size={20} />
-                        <span className="text-xs font-medium">{t.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Recognition Mode Settings */}
-                <div className="bg-app-card/40 p-4 rounded-2xl border border-app-border space-y-4">
-                  <h3 className="text-app-text font-medium flex items-center gap-2">
+                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-4">
+                  <h3 className="text-white font-medium flex items-center gap-2">
                     <Zap size={18} className="text-gold" />
                     محرك التعرف على الصوت
                   </h3>
@@ -1055,7 +991,7 @@ export default function App() {
                             ? 'opacity-50 cursor-not-allowed bg-gray-800 border-transparent text-gray-500'
                             : recognitionMode === mode.id 
                               ? 'bg-gold/10 border-gold text-gold' 
-                              : 'bg-app-card/40 border-transparent text-gray-400 hover:bg-app-card/60'
+                              : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
                         }`}
                       >
                         <mode.icon size={20} className="mt-1 shrink-0" />
@@ -1070,7 +1006,7 @@ export default function App() {
                 </div>
 
                 {/* Vibration Toggle */}
-                <div className="bg-app-card/40 p-4 rounded-2xl border border-app-border flex items-center justify-between">
+                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gold/10 rounded-xl flex items-center justify-center">
                       <Volume2 className="text-gold" size={20} />
@@ -1092,7 +1028,7 @@ export default function App() {
                 </div>
 
                 {/* Developer Mode Toggle */}
-                <div className="bg-app-card/40 p-4 rounded-2xl border border-app-border flex items-center justify-between">
+                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gold/10 rounded-xl flex items-center justify-center">
                       <Eye className="text-gold" size={20} />
@@ -1136,23 +1072,23 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowCustomization(false)}
-              className="fixed inset-0 bg-app-bg/60 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             />
             <motion.div 
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              className="fixed bottom-0 left-0 right-0 bg-app-card rounded-t-[40px] z-50 p-8 max-h-[80vh] overflow-y-auto border-t border-app-border"
+              className="fixed bottom-0 left-0 right-0 bg-card-bg rounded-t-[40px] z-50 p-8 max-h-[80vh] overflow-y-auto border-t border-white/10"
             >
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-xl font-bold">تخصيص الأذكار</h2>
-                <button onClick={() => setShowCustomization(false)} className="p-2 bg-app-card/40 rounded-full">
+                <button onClick={() => setShowCustomization(false)} className="p-2 bg-white/5 rounded-full">
                   <X size={20} />
                 </button>
               </div>
               <div className="space-y-4 mb-8">
                 {dhikrs.map(dhikr => (
-                  <div key={dhikr.id} className="bg-app-card/40 p-4 rounded-2xl flex items-center justify-between group">
+                  <div key={dhikr.id} className="bg-white/5 p-4 rounded-2xl flex items-center justify-between group">
                     <div className="flex items-center gap-4">
                       <div className="w-3 h-3 rounded-full" style={{ backgroundColor: dhikr.color }} />
                       <div>
@@ -1161,7 +1097,7 @@ export default function App() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => { setIsAddingNew(false); setEditingSource('settings'); setEditingDhikr(dhikr); }} className="p-2 text-gray-400 hover:text-app-text">
+                      <button onClick={() => { setIsAddingNew(false); setEditingSource('settings'); setEditingDhikr(dhikr); }} className="p-2 text-gray-400 hover:text-white">
                         <Edit3 size={18} />
                       </button>
                       <button onClick={() => deleteDhikr(dhikr.id)} className="p-2 text-red-400 hover:text-red-300">
@@ -1170,12 +1106,12 @@ export default function App() {
                     </div>
                   </div>
                 ))}
-                <button onClick={startAddDhikr} className="w-full p-4 border-2 border-dashed border-app-border rounded-2xl flex items-center justify-center gap-2 text-gold hover:bg-gold/5">
+                <button onClick={startAddDhikr} className="w-full p-4 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center gap-2 text-gold hover:bg-gold/5">
                   <Plus size={20} />
                   <span>إضافة ذكر جديد</span>
                 </button>
               </div>
-              <button onClick={() => { setDhikrs(INITIAL_DHIKRS); setShowCustomization(false); }} className="w-full flex items-center justify-center gap-2 text-gray-500 text-sm hover:text-app-text">
+              <button onClick={() => { setDhikrs(INITIAL_DHIKRS); setShowCustomization(false); }} className="w-full flex items-center justify-center gap-2 text-gray-500 text-sm hover:text-white">
                 <RotateCcw size={16} />
                 <span>استعادة الإعدادات الافتراضية</span>
               </button>
@@ -1187,29 +1123,29 @@ export default function App() {
       <AnimatePresence>
         {editingDhikr && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setEditingDhikr(null); setIsAddingNew(false); setEditingSource(null); }} className="absolute inset-0 bg-app-bg/80 backdrop-blur-md" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-app-card p-8 rounded-[32px] w-full max-w-md relative z-10 border border-app-border">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { if (editingSource === 'settings') setShowCustomization(false); setEditingDhikr(null); setIsAddingNew(false); setEditingSource(null); }} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-card-bg p-8 rounded-[32px] w-full max-w-md relative z-10 border border-white/10">
               <h3 className="text-xl font-bold mb-6 text-center">{isAddingNew ? 'إضافة ذكر جديد' : 'تعديل الذكر'}</h3>
               <div className="space-y-6">
                 <div>
                   <label className="text-xs text-gray-500 block mb-2">النص (مثال: سبحان الله)</label>
-                  <input type="text" placeholder="اكتب الذكر هنا..." value={editingDhikr.text} onChange={(e) => setEditingDhikr({...editingDhikr, text: e.target.value})} className="w-full bg-app-card/40 border border-app-border rounded-xl p-4 text-center text-lg focus:outline-none focus:border-gold text-app-text" />
+                  <input type="text" placeholder="اكتب الذكر هنا..." value={editingDhikr.text} onChange={(e) => setEditingDhikr({...editingDhikr, text: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-center text-lg focus:outline-none focus:border-gold" />
                 </div>
                 <div>
                   <label className="text-xs text-gray-500 block mb-2">الهدف</label>
-                  <input type="tel" dir="ltr" value={editingDhikr.target || ''} onChange={(e) => setEditingDhikr({...editingDhikr, target: Math.min(99999999, parseArabicNumbers(e.target.value))})} className="w-full bg-app-card/40 border border-app-border rounded-xl p-4 text-center text-lg focus:outline-none focus:border-gold font-sans text-app-text" />
+                  <input type="tel" dir="ltr" value={editingDhikr.target || ''} onChange={(e) => setEditingDhikr({...editingDhikr, target: Math.min(99999999, parseArabicNumbers(e.target.value))})} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-center text-lg focus:outline-none focus:border-gold font-sans" />
                 </div>
                 <div>
                   <label className="text-xs text-gray-500 block mb-2">اختر لوناً</label>
                   <div className="flex flex-wrap justify-center gap-3">
                     {colors.map(color => (
-                      <button key={color} onClick={() => setEditingDhikr({...editingDhikr, color})} className={`w-8 h-8 rounded-full border-2 transition-all ${editingDhikr.color === color ? 'border-app-text scale-125' : 'border-transparent'}`} style={{ backgroundColor: color }} />
+                      <button key={color} onClick={() => setEditingDhikr({...editingDhikr, color})} className={`w-8 h-8 rounded-full border-2 transition-all ${editingDhikr.color === color ? 'border-white scale-125' : 'border-transparent'}`} style={{ backgroundColor: color }} />
                     ))}
                   </div>
                 </div>
                 <div className="flex gap-4 pt-4">
                   <button onClick={saveDhikr} disabled={!editingDhikr.text.trim()} className={`flex-1 font-bold py-4 rounded-2xl transition-colors ${editingDhikr.text.trim() ? 'bg-gold text-dark-bg' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}>حفظ</button>
-                  <button onClick={() => { setEditingDhikr(null); setIsAddingNew(false); setEditingSource(null); }} className="flex-1 bg-app-card/40 font-bold py-4 rounded-2xl">إلغاء</button>
+                  <button onClick={() => { if (editingSource === 'settings') setShowCustomization(false); setEditingDhikr(null); setIsAddingNew(false); setEditingSource(null); }} className="flex-1 bg-white/5 font-bold py-4 rounded-2xl">إلغاء</button>
                 </div>
               </div>
             </motion.div>
@@ -1220,14 +1156,14 @@ export default function App() {
       <AnimatePresence>
         {showResetConfirm && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowResetConfirm(false)} className="absolute inset-0 bg-app-bg/80 backdrop-blur-md" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-app-card p-8 rounded-[32px] w-full max-w-sm relative z-10 border border-app-border text-center">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowResetConfirm(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-card-bg p-8 rounded-[32px] w-full max-w-sm relative z-10 border border-white/10 text-center">
               <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6"><RotateCcw className="text-red-500" size={32} /></div>
               <h3 className="text-xl font-bold mb-2">تصفير العدادات؟</h3>
               <p className="text-gray-400 mb-8">هل أنت متأكد من رغبتك في تصفير جميع العدادات الحالية؟</p>
               <div className="flex gap-4">
                 <button onClick={handleReset} className="flex-1 bg-red-500 text-white font-bold py-4 rounded-2xl">نعم، تصفير</button>
-                <button onClick={() => setShowResetConfirm(false)} className="flex-1 bg-app-card/40 font-bold py-4 rounded-2xl">إلغاء</button>
+                <button onClick={() => setShowResetConfirm(false)} className="flex-1 bg-white/5 font-bold py-4 rounded-2xl">إلغاء</button>
               </div>
             </motion.div>
           </div>
@@ -1236,18 +1172,18 @@ export default function App() {
 
       <AnimatePresence>
         {showVoskPrompt && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-app-bg/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-app-card border border-app-border rounded-3xl p-6 w-full max-w-sm text-center space-y-6"
+              className="bg-card-bg border border-white/10 rounded-3xl p-6 w-full max-w-sm text-center space-y-6"
             >
               <div className="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mx-auto">
                 <WifiOff className="text-gold" size={32} />
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-bold text-app-text">تحميل محرك الأوفلاين</h3>
+                <h3 className="text-xl font-bold text-white">تحميل محرك الأوفلاين</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">
                   لتتمكن من التسبيح بدون إنترنت، يحتاج التطبيق لتحميل موديل اللغة العربية (حوالي 50 ميجابايت). سيتم التحميل لمرة واحدة فقط.
                 </p>
@@ -1265,7 +1201,7 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => setShowVoskPrompt(false)}
-                  className="w-full py-3 bg-app-card/40 text-app-text font-medium rounded-xl hover:bg-app-card/60 transition-colors"
+                  className="w-full py-3 bg-white/5 text-white font-medium rounded-xl hover:bg-white/10 transition-colors"
                 >
                   إلغاء
                 </button>
@@ -1278,8 +1214,8 @@ export default function App() {
       <AnimatePresence>
         {showPermissionError && (
           <div className="fixed inset-0 z-[80] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowPermissionError(false)} className="absolute inset-0 bg-app-bg/90 backdrop-blur-md" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-app-card p-8 rounded-[32px] w-full max-w-md relative z-10 border border-app-border">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowPermissionError(false)} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-card-bg p-8 rounded-[32px] w-full max-w-md relative z-10 border border-white/10">
               <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6"><VolumeX className="text-red-500" size={40} /></div>
               <h3 className="text-xl font-bold mb-4 text-center text-red-500">مشكلة في الوصول للميكروفون</h3>
               <div className="space-y-4 text-right text-gray-300">
