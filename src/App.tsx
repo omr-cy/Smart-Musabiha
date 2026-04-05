@@ -40,7 +40,11 @@ import {
   Wifi,
   WifiOff,
   Zap,
-  Move
+  Move,
+  Heart,
+  LayoutGrid,
+  Info,
+  Wrench
 } from 'lucide-react';
 import { Dhikr, INITIAL_DHIKRS, RecognitionMode } from './types';
 
@@ -141,6 +145,7 @@ export default function App() {
   const [interimTranscript, setInterimTranscript] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [showCustomization, setShowCustomization] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showPermissionError, setShowPermissionError] = useState(false);
   const [editingDhikr, setEditingDhikr] = useState<Dhikr | null>(null);
@@ -871,11 +876,50 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-dark-bg text-white font-sans flex flex-col p-6 dir-rtl" dir="rtl">
-      <header className="flex items-center justify-between gap-4 mb-10">
-        <div className="flex-1 flex justify-start">
-          <button className="w-11 h-11 bg-card-bg/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/5 text-gray-400 hover:bg-white/5 transition-all hover:text-white text-[11px] font-bold">
+      <header className="sticky top-0 z-50 flex items-center justify-between gap-4 mb-6 -mt-6 pt-6 pb-4 -mx-6 px-6 bg-dark-bg/90 backdrop-blur-xl border-b border-white/5">
+        <div className="flex-1 flex justify-start relative">
+          <button 
+            onClick={() => setShowMoreMenu(!showMoreMenu)}
+            className="w-11 h-11 bg-card-bg/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/5 text-gray-400 hover:bg-white/5 transition-all hover:text-white text-[11px] font-bold"
+          >
             المزيد
           </button>
+          
+          <AnimatePresence>
+            {showMoreMenu && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setShowMoreMenu(false)} 
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  className="absolute top-14 right-0 w-48 bg-card-bg/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                >
+                  <div className="flex flex-col py-2">
+                    <button className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors text-right w-full">
+                      <Heart size={16} className="text-red-400" />
+                      <span>إدعمنا</span>
+                    </button>
+                    <button className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors text-right w-full">
+                      <LayoutGrid size={16} className="text-blue-400" />
+                      <span>مشاريعنا</span>
+                    </button>
+                    <button className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors text-right w-full">
+                      <Info size={16} className="text-green-400" />
+                      <span>من نحن</span>
+                    </button>
+                    <button className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors text-right w-full">
+                      <Wrench size={16} className="text-gold" />
+                      <span>الدعم والتطوير</span>
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </div>
         
         <div className="bg-card-bg/40 px-6 h-11 flex items-center justify-center rounded-xl border border-white/5 backdrop-blur-md shadow-lg">
