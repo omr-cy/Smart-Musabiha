@@ -28,28 +28,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          
-      - name: Generate Android Assets
-        run: |
-          # Install ImageMagick to ensure 'convert' is available
-          sudo apt-get update && sudo apt-get install -y imagemagick
-          
-          # Remove default Android vector icons that override generated PNGs
-          rm -f android/app/src/main/res/drawable/ic_launcher_background.xml
-          rm -f android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml
-          rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
-          rm -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
-          
-          # Ensure foreground exists
-          if [ ! -f assets/icon-foreground.png ]; then
-            cp assets/icon-only.png assets/icon-foreground.png || true
-          fi
-          
-          # Ensure a solid white background exists for the adaptive icon
-          convert -size 1024x1024 xc:white assets/icon-background.png
-          
-          # Generate icons
-          npx @capacitor/assets generate --android
 
       - name: Sync Android
         run: npx cap sync android

@@ -148,6 +148,7 @@ export default function App() {
   const handleIncrement = useCallback((id: string) => {
     setDhikrs(prev => prev.map(d => {
       if (d.id === id) {
+        if (d.count >= 99999999) return d;
         if (vibrationEnabled && navigator.vibrate) navigator.vibrate(50);
         return { ...d, count: d.count + 1, lastIncrement: Date.now() };
       }
@@ -807,9 +808,9 @@ export default function App() {
             </div>
             <div className="h-16 flex items-start justify-center w-full pt-2">
               <p className={`font-medium text-gray-300 text-center px-2 leading-snug line-clamp-3 ${
-                dhikr.text.length <= 15 ? 'text-sm' : 
-                dhikr.text.length <= 30 ? 'text-xs' : 
-                dhikr.text.length <= 50 ? 'text-[10px]' : 'text-[8px]'
+                dhikr.text.length <= 15 ? 'text-xs' : 
+                dhikr.text.length <= 30 ? 'text-[11px]' : 
+                dhikr.text.length <= 50 ? 'text-[9px]' : 'text-[7px]'
               }`}>{dhikr.text}</p>
             </div>
             <div className="absolute bottom-4 right-0 w-full text-center text-[10px] text-gray-500">
@@ -1085,7 +1086,7 @@ export default function App() {
                 </div>
                 <div>
                   <label className="text-xs text-gray-500 block mb-2">الهدف</label>
-                  <input type="tel" dir="ltr" value={editingDhikr.target || ''} onChange={(e) => setEditingDhikr({...editingDhikr, target: parseArabicNumbers(e.target.value)})} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-center text-lg focus:outline-none focus:border-gold font-sans" />
+                  <input type="tel" dir="ltr" value={editingDhikr.target || ''} onChange={(e) => setEditingDhikr({...editingDhikr, target: Math.min(99999999, parseArabicNumbers(e.target.value))})} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-center text-lg focus:outline-none focus:border-gold font-sans" />
                 </div>
                 <div>
                   <label className="text-xs text-gray-500 block mb-2">اختر لوناً</label>
