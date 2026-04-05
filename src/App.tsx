@@ -737,7 +737,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white font-sans flex flex-col p-6 pt-[env(safe-area-inset-top)] dir-rtl" dir="rtl">
+    <div className="min-h-screen bg-dark-bg text-white font-sans flex flex-col p-6 dir-rtl" dir="rtl">
       <header className="sticky top-0 z-50 bg-dark-bg/90 backdrop-blur-md flex items-center justify-between gap-4 py-4 -mx-6 px-6 mb-10">
         <div className="flex-1 flex justify-start">
           <button className="w-10 h-10 bg-card-bg/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/5 text-white text-[10px] font-bold hover:bg-white/10 transition-all">
