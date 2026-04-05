@@ -536,7 +536,7 @@ export default function App() {
 
   useEffect(() => {
     if (isNative) {
-      if (isListening) {
+      if (isListening && activeEngine === 'google') {
         AudioMute.mute().catch(console.error);
       } else {
         AudioMute.unmute().catch(console.error);
@@ -547,7 +547,7 @@ export default function App() {
         AudioMute.unmute().catch(console.error);
       }
     };
-  }, [isListening, isNative]);
+  }, [isListening, activeEngine, isNative]);
 
   // Keep-alive check
   useEffect(() => {
@@ -705,27 +705,41 @@ export default function App() {
     setIsAddingNew(false);
   };
 
+  const titleLongPressRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startLongPress = () => {
+    titleLongPressRef.current = setTimeout(() => {
+      setShowDebug(prev => !prev);
+    }, 1000);
+  };
+
+  const endLongPress = () => {
+    if (titleLongPressRef.current) {
+      clearTimeout(titleLongPressRef.current);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-dark-bg text-white font-sans flex flex-col p-6 dir-rtl" dir="rtl">
       <header className="flex items-center justify-between gap-4 mb-10">
         <div className="flex-1 flex justify-start">
-          {developerMode && (
-            <button 
-              onClick={() => setShowDebug(!showDebug)}
-              className={`w-12 h-12 rounded-2xl transition-all flex items-center justify-center border ${
-                showDebug 
-                  ? 'bg-gold text-dark-bg border-gold shadow-lg shadow-gold/20' 
-                  : 'bg-card-bg/40 text-gray-500 border-white/5 hover:bg-white/5'
-              }`}
-            >
-              <Eye size={20} />
-            </button>
-          )}
+          <button 
+            className="w-auto h-10 px-3 rounded-xl transition-all flex items-center justify-center border bg-card-bg/40 text-gray-400 border-white/5 hover:bg-white/5 hover:text-white"
+          >
+            <span className="text-xs font-bold">إدعمنا</span>
+          </button>
         </div>
         
-        <div className="bg-card-bg/40 px-5 py-2.5 rounded-2xl border border-white/5 backdrop-blur-md shadow-xl">
-          <h1 className="text-gold text-lg md:text-xl font-black tracking-tight text-center leading-tight">
-            المسبحة الصوتية <span className="text-white/90 font-medium block text-[10px] mt-1 tracking-[0.2em] uppercase opacity-60">الذكية</span>
+        <div className="bg-card-bg/40 px-4 py-2 rounded-xl border border-white/5 backdrop-blur-md shadow-xl">
+          <h1 
+            onTouchStart={startLongPress}
+            onTouchEnd={endLongPress}
+            onMouseDown={startLongPress}
+            onMouseUp={endLongPress}
+            onMouseLeave={endLongPress}
+            className="text-gold text-sm md:text-base font-black tracking-tight text-center leading-tight cursor-pointer"
+          >
+            المسبحة الصوتية <span className="text-white/90 font-medium block text-[8px] mt-0.5 tracking-[0.2em] uppercase opacity-60">الذكية</span>
           </h1>
         </div>
 
