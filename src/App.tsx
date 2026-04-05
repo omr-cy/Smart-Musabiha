@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import 'regenerator-runtime/runtime';
 import { motion, AnimatePresence } from 'motion/react';
 import { createModel } from 'vosk-browser';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { Filesystem } from '@capacitor/filesystem';
+
+const AudioMute = registerPlugin<any>('AudioMute');
 import { 
   Mic, 
   Settings, 
@@ -531,6 +533,21 @@ export default function App() {
       }
     }
   }, [isListening, recognitionMode, isOnline, modelReady, modelLoading, stopAllEngines]);
+
+  useEffect(() => {
+    if (isNative) {
+      if (isListening && activeEngine === 'google') {
+        AudioMute.mute().catch(console.error);
+      } else {
+        AudioMute.unmute().catch(console.error);
+      }
+    }
+    return () => {
+      if (isNative) {
+        AudioMute.unmute().catch(console.error);
+      }
+    };
+  }, [isListening, activeEngine, isNative]);
 
   // Keep-alive check
   useEffect(() => {
