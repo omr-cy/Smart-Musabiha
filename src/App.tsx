@@ -4,6 +4,24 @@ import { motion, AnimatePresence } from 'motion/react';
 import { createModel } from 'vosk-browser';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { Filesystem } from '@capacitor/filesystem';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  TouchSensor,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const AudioMute = registerPlugin<any>('AudioMute');
 import { 
@@ -21,7 +39,8 @@ import {
   Loader2,
   Wifi,
   WifiOff,
-  Zap
+  Zap,
+  Move
 } from 'lucide-react';
 import { Dhikr, INITIAL_DHIKRS, RecognitionMode } from './types';
 
@@ -35,6 +54,85 @@ const parseArabicNumbers = (str: string | number): number => {
 
 const formatNumber = (num: number): string => {
   return new Intl.NumberFormat('en-US', { useGrouping: false }).format(num);
+};
+
+const DhikrCard = ({ dhikr, handleIncrement, handleResetSingle, setIsAddingNew, setEditingSource, setEditingDhikr, isOverlay, attributes, listeners }: any) => {
+  return (
+    <motion.div
+      animate={!isOverlay ? { 
+        scale: dhikr.lastIncrement && (Date.now() - dhikr.lastIncrement < 300) ? [1, 1.1, 1] : 1
+      } : {}}
+      transition={{ duration: 0.3 }}
+      whileTap={!isOverlay ? { scale: 0.95 } : {}}
+      className={`bg-card-bg rounded-3xl p-6 flex flex-col items-center justify-center border border-white/5 relative group h-48 w-full ${isOverlay ? 'shadow-2xl shadow-black/50 scale-105 cursor-grabbing z-50' : 'cursor-pointer'}`}
+      onContextMenu={!isOverlay ? (e) => {
+        e.preventDefault();
+        setIsAddingNew(false);
+        setEditingSource('main');
+        setEditingDhikr(dhikr);
+      } : undefined}
+      onClick={!isOverlay ? () => handleIncrement(dhikr.id) : undefined}
+    >
+      <div className="absolute top-4 right-4 w-2 h-2 rounded-full" style={{ backgroundColor: dhikr.color }} />
+      <button
+        className={`absolute top-3 left-3 p-2 text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all touch-none ${isOverlay ? 'cursor-grabbing' : 'cursor-grab active:cursor-grabbing'}`}
+        title="تحريك"
+        {...attributes}
+        {...listeners}
+        onClick={(e) => e.stopPropagation()}
+        onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
+      >
+        <Move size={14} />
+      </button>
+      <div className="h-14 flex items-end justify-center pb-2">
+        <p className="text-4xl font-bold leading-none" style={{ color: dhikr.color }}>{formatNumber(dhikr.count)}</p>
+      </div>
+      <div className="h-16 flex items-start justify-center w-full pt-2">
+        <p className={`font-medium text-gray-300 text-center px-2 leading-snug line-clamp-3 ${
+          dhikr.text.length <= 15 ? 'text-xs' : 
+          dhikr.text.length <= 30 ? 'text-[11px]' : 
+          dhikr.text.length <= 50 ? 'text-[9px]' : 'text-[7px]'
+        }`}>{dhikr.text}</p>
+      </div>
+      <div className="absolute bottom-4 right-0 w-full text-center text-[10px] text-gray-500">
+        {formatNumber(dhikr.count)} / {formatNumber(dhikr.target)}
+      </div>
+      <button
+        onClick={!isOverlay ? (e) => {
+          e.stopPropagation();
+          handleResetSingle(dhikr.id);
+        } : undefined}
+        className="absolute bottom-3 left-3 p-2 text-gray-500 hover:text-red-400 bg-white/5 hover:bg-red-500/10 rounded-xl transition-all"
+        title="تصفير هذا الذكر"
+      >
+        <RotateCcw size={14} />
+      </button>
+    </motion.div>
+  );
+};
+
+const SortableDhikrItem = (props: any) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: props.dhikr.id });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.3 : 1,
+    zIndex: isDragging ? 1 : 0,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <DhikrCard {...props} attributes={attributes} listeners={listeners} />
+    </div>
+  );
 };
 
 export default function App() {
@@ -69,6 +167,41 @@ export default function App() {
     hasSound: false,
     hasSpeech: false
   });
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 150,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragStart = (event: any) => {
+    setActiveId(event.active.id);
+  };
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (over && active.id !== over.id) {
+      setDhikrs((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -733,7 +866,6 @@ export default function App() {
     else setDhikrs(prev => prev.map(d => d.id === finalDhikr.id ? finalDhikr : d));
     setEditingDhikr(null);
     setIsAddingNew(false);
-    if (editingSource === 'settings') setShowCustomization(false);
     setEditingSource(null);
   };
 
@@ -741,12 +873,12 @@ export default function App() {
     <div className="min-h-screen bg-dark-bg text-white font-sans flex flex-col p-6 dir-rtl" dir="rtl">
       <header className="flex items-center justify-between gap-4 mb-10">
         <div className="flex-1 flex justify-start">
-          <button className="w-10 h-10 bg-card-bg/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/5 text-gold text-[10px] font-bold hover:bg-gold/10 transition-all">
-            ادعمنا
+          <button className="w-11 h-11 bg-card-bg/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/5 text-gray-400 hover:bg-white/5 transition-all hover:text-white text-[11px] font-bold">
+            المزيد
           </button>
         </div>
         
-        <div className="bg-card-bg/40 px-3 py-1.5 rounded-xl border border-white/5 backdrop-blur-md shadow-lg">
+        <div className="bg-card-bg/40 px-6 h-11 flex items-center justify-center rounded-xl border border-white/5 backdrop-blur-md shadow-lg">
           <h1 className="text-gold text-xs font-bold tracking-tight text-center leading-tight">
             المسبحة الصوتية الذكية
           </h1>
@@ -755,9 +887,9 @@ export default function App() {
         <div className="flex-1 flex justify-end">
           <button 
             onClick={() => setShowSettings(true)}
-            className="w-10 h-10 bg-card-bg/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/5 text-gray-400 hover:bg-white/5 transition-all hover:text-white"
+            className="w-11 h-11 bg-card-bg/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/5 text-gray-400 hover:bg-white/5 transition-all hover:text-white"
           >
-            <Settings size={18} />
+            <Settings size={20} />
           </button>
         </div>
       </header>
@@ -765,15 +897,15 @@ export default function App() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-b from-card-bg to-black/40 rounded-3xl p-8 mb-8 text-center border border-white/5 dhikr-card-shadow relative overflow-hidden"
+        className="bg-gradient-to-br from-card-bg via-card-bg to-gold/5 rounded-3xl p-6 mb-6 text-center border border-white/10 dhikr-card-shadow relative overflow-hidden"
       >
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-gold/30 rounded-full blur-sm" />
-        <p className="text-gray-400 text-sm mb-2">مجموع التسبيح</p>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-gold/40 rounded-full blur-sm" />
+        <p className="text-gray-400 text-sm font-bold mb-3">مجموع التسبيح</p>
         <motion.p 
           key={totalCount}
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
-          className="text-6xl font-bold text-gold"
+          className="text-5xl font-bold text-gold"
         >
           {formatNumber(totalCount)}
         </motion.p>
@@ -824,62 +956,51 @@ export default function App() {
         </AnimatePresence>
       </motion.div>
 
-      <div className="grid grid-cols-2 gap-4 flex-1 overflow-y-auto pb-32">
-        {dhikrs.map((dhikr) => (
-          <motion.div
-            key={dhikr.id}
-            animate={{ 
-              scale: (dhikr as any).lastIncrement && (Date.now() - (dhikr as any).lastIncrement < 300) ? [1, 1.1, 1] : 1
-            }}
-            transition={{ duration: 0.3 }}
-            whileTap={{ scale: 0.95 }}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              setIsAddingNew(false);
-              setEditingSource('main');
-              setEditingDhikr(dhikr);
-            }}
-            onClick={() => handleIncrement(dhikr.id)}
-            className="bg-card-bg rounded-3xl p-6 flex flex-col items-center justify-center border border-white/5 relative group h-48 cursor-pointer"
-          >
-            <div className="absolute top-4 right-4 w-2 h-2 rounded-full" style={{ backgroundColor: dhikr.color }} />
-            <div className="h-14 flex items-end justify-center pb-2">
-              <p className="text-4xl font-bold leading-none" style={{ color: dhikr.color }}>{formatNumber(dhikr.count)}</p>
-            </div>
-            <div className="h-16 flex items-start justify-center w-full pt-2">
-              <p className={`font-medium text-gray-300 text-center px-2 leading-snug line-clamp-3 ${
-                dhikr.text.length <= 15 ? 'text-xs' : 
-                dhikr.text.length <= 30 ? 'text-[11px]' : 
-                dhikr.text.length <= 50 ? 'text-[9px]' : 'text-[7px]'
-              }`}>{dhikr.text}</p>
-            </div>
-            <div className="absolute bottom-4 right-0 w-full text-center text-[10px] text-gray-500">
-              {formatNumber(dhikr.count)} / {formatNumber(dhikr.target)}
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleResetSingle(dhikr.id);
-              }}
-              className="absolute bottom-3 left-3 p-2 text-gray-500 hover:text-red-400 bg-white/5 hover:bg-red-500/10 rounded-xl transition-all"
-              title="تصفير هذا الذكر"
-            >
-              <RotateCcw size={14} />
-            </button>
-          </motion.div>
-        ))}
-      </div>
+      <DndContext 
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={() => setActiveId(null)}
+      >
+        <SortableContext 
+          items={dhikrs.map(d => d.id)}
+          strategy={rectSortingStrategy}
+        >
+          <div className="grid grid-cols-2 gap-4 flex-1 overflow-y-auto pb-32">
+            {dhikrs.map((dhikr) => (
+              <SortableDhikrItem 
+                key={dhikr.id}
+                dhikr={dhikr}
+                handleIncrement={handleIncrement}
+                handleResetSingle={handleResetSingle}
+                setIsAddingNew={setIsAddingNew}
+                setEditingSource={setEditingSource}
+                setEditingDhikr={setEditingDhikr}
+              />
+            ))}
+          </div>
+        </SortableContext>
+        <DragOverlay>
+          {activeId ? (
+            <DhikrCard 
+              dhikr={dhikrs.find(d => d.id === activeId)} 
+              isOverlay 
+            />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
-      <div className="fixed bottom-0 left-0 right-0 p-8 pb-16 flex justify-between items-center bg-gradient-to-t from-dark-bg via-dark-bg/90 to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 p-8 pb-16 flex justify-between items-center bg-gradient-to-t from-dark-bg via-dark-bg/90 to-transparent z-40 pointer-events-none">
         <button 
           onClick={() => setShowCustomization(true)}
-          className="w-14 h-14 bg-card-bg rounded-2xl flex items-center justify-center border border-white/10 text-gray-400 hover:text-white transition-all"
+          className="pointer-events-auto w-14 h-14 bg-card-bg rounded-2xl flex items-center justify-center border border-white/10 text-gray-400 hover:text-white transition-all"
           title="تخصيص الأذكار"
         >
           <Edit3 size={24} />
         </button>
 
-        <div className="relative">
+        <div className="relative pointer-events-auto">
           <motion.button
             animate={isListening ? { 
               scale: [1, 1.1, 1],
@@ -918,7 +1039,7 @@ export default function App() {
               <Mic className="text-dark-bg" size={32} />
             )}
           </motion.button>
-          <p className="absolute -bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-gray-400 flex items-center gap-2">
+          <p className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-gray-400 flex items-center gap-2">
             {isListening ? (
               <>
                 <span>جاري الاستماع</span>
@@ -940,7 +1061,7 @@ export default function App() {
 
         <button 
           onClick={() => setShowResetConfirm(true)}
-          className="w-14 h-14 bg-card-bg rounded-2xl flex items-center justify-center border border-white/10"
+          className="pointer-events-auto w-14 h-14 bg-card-bg rounded-2xl flex items-center justify-center border border-white/10"
         >
           <RotateCcw className="text-gray-400" size={24} />
         </button>
@@ -1123,7 +1244,7 @@ export default function App() {
       <AnimatePresence>
         {editingDhikr && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { if (editingSource === 'settings') setShowCustomization(false); setEditingDhikr(null); setIsAddingNew(false); setEditingSource(null); }} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setEditingDhikr(null); setIsAddingNew(false); setEditingSource(null); }} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-card-bg p-8 rounded-[32px] w-full max-w-md relative z-10 border border-white/10">
               <h3 className="text-xl font-bold mb-6 text-center">{isAddingNew ? 'إضافة ذكر جديد' : 'تعديل الذكر'}</h3>
               <div className="space-y-6">
@@ -1145,7 +1266,7 @@ export default function App() {
                 </div>
                 <div className="flex gap-4 pt-4">
                   <button onClick={saveDhikr} disabled={!editingDhikr.text.trim()} className={`flex-1 font-bold py-4 rounded-2xl transition-colors ${editingDhikr.text.trim() ? 'bg-gold text-dark-bg' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}>حفظ</button>
-                  <button onClick={() => { if (editingSource === 'settings') setShowCustomization(false); setEditingDhikr(null); setIsAddingNew(false); setEditingSource(null); }} className="flex-1 bg-white/5 font-bold py-4 rounded-2xl">إلغاء</button>
+                  <button onClick={() => { setEditingDhikr(null); setIsAddingNew(false); setEditingSource(null); }} className="flex-1 bg-white/5 font-bold py-4 rounded-2xl">إلغاء</button>
                 </div>
               </div>
             </motion.div>
