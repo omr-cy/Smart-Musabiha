@@ -29,8 +29,8 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Generate Android Assets
-        run: cp assets/icon_dark.png assets/icon.png && npx @capacitor/assets generate --android
+      # - name: Generate Android Assets
+      #   run: cp assets/icon_dark.png assets/icon.png && npx @capacitor/assets generate --android
 
       - name: Sync Android
         run: npx cap sync android
@@ -42,11 +42,11 @@ jobs:
           gradle wrapper --gradle-version 8.13
           chmod +x gradlew
 
-      - name: Clean Android Build
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew clean
+      # - name: Clean Android Build
+      #   run: |
+      #     cd android
+      #     chmod +x gradlew
+      #     ./gradlew clean
 
       - name: Build with Gradle
         run: |
