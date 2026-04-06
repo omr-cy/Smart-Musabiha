@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Noto Kufi Arabic", ui-sans-serif, system-ui, sans-serif;
+  --color-gold: #D4AF37;
+  --color-dark-bg: #121212;
+  --color-card-bg: #1E1E1E;
+}
+
+body {
+  background-color: var(--color-dark-bg);
+  color: white;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dhikr-card-shadow {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
