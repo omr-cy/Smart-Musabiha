@@ -1,28 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
-:root {
-  --dark-bg: #121212;
-  --card-bg: #1e1e1e;
-  --gold: #facc15;
-}
-
 @theme {
-  --color-dark-bg: var(--dark-bg);
-  --color-card-bg: var(--card-bg);
-  --color-gold: var(--gold);
+  --font-sans: "Noto Kufi Arabic", ui-sans-serif, system-ui, sans-serif;
+  --color-gold: #D4AF37;
+  --color-dark-bg: #121212;
+  --color-card-bg: #1E1E1E;
 }
 
 body {
-  background-color: var(--dark-bg);
+  background-color: var(--color-dark-bg);
   color: white;
-  margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .dhikr-card-shadow {
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-}
-
-.dir-rtl {
-  direction: rtl;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }

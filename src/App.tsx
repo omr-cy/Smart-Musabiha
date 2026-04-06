@@ -44,8 +44,7 @@ import {
   Heart,
   LayoutGrid,
   Info,
-  Wrench,
-  Share2
+  Wrench
 } from 'lucide-react';
 import { Dhikr, INITIAL_DHIKRS, RecognitionMode } from './types';
 
@@ -64,9 +63,11 @@ const formatNumber = (num: number): string => {
 const DhikrCard = ({ dhikr, handleIncrement, handleResetSingle, setIsAddingNew, setEditingSource, setEditingDhikr, isOverlay, attributes, listeners }: any) => {
   return (
     <motion.div
-      animate={!isOverlay ? { scale: 1 } : {}}
-      transition={{ duration: 0, ease: "linear" }}
-      whileTap={!isOverlay ? { scale: 0.97 } : {}}
+      animate={!isOverlay ? { 
+        scale: dhikr.lastIncrement && (Date.now() - dhikr.lastIncrement < 300) ? [1, 1.1, 1] : 1
+      } : {}}
+      transition={{ duration: 0.3 }}
+      whileTap={!isOverlay ? { scale: 0.95 } : {}}
       className={`bg-card-bg rounded-3xl p-6 flex flex-col items-center justify-center border border-white/5 relative group h-48 w-full ${isOverlay ? 'shadow-2xl shadow-black/50 scale-105 cursor-grabbing z-50' : 'cursor-pointer'}`}
       onContextMenu={!isOverlay ? (e) => {
         e.preventDefault();
@@ -88,16 +89,7 @@ const DhikrCard = ({ dhikr, handleIncrement, handleResetSingle, setIsAddingNew, 
         <Move size={14} />
       </button>
       <div className="h-14 flex items-end justify-center pb-2">
-        <motion.p 
-          key={dhikr.lastIncrement || 'initial'}
-          initial={dhikr.lastIncrement ? { textShadow: `0px 0px 12px ${dhikr.color}`, filter: 'brightness(1.25)', scale: 1.01 } : false}
-          animate={{ textShadow: `0px 0px 0px ${dhikr.color}00`, filter: 'brightness(1)', scale: 1 }}
-          transition={{ duration: 0.04, ease: "linear" }}
-          className="text-4xl font-bold leading-none" 
-          style={{ color: dhikr.color }}
-        >
-          {formatNumber(dhikr.count)}
-        </motion.p>
+        <p className="text-4xl font-bold leading-none" style={{ color: dhikr.color }}>{formatNumber(dhikr.count)}</p>
       </div>
       <div className="h-16 flex items-start justify-center w-full pt-2">
         <p className={`font-medium text-gray-300 text-center px-2 leading-snug line-clamp-3 ${
@@ -922,26 +914,6 @@ export default function App() {
                     <button className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors text-right w-full">
                       <Wrench size={16} className="text-gold" />
                       <span>الدعم والتطوير</span>
-                    </button>
-                    <button 
-                      onClick={() => {
-                        if (navigator.share) {
-                          navigator.share({
-                            title: 'المسبحة الصوتية الذكية',
-                            text: 'تطبيق مسبحة ذكي يستخدم تقنية التعرف على الصوت لعد الأذكار تلقائياً.',
-                            url: window.location.href,
-                          }).catch(console.error);
-                        } else {
-                          // Fallback: copy to clipboard
-                          navigator.clipboard.writeText(window.location.href);
-                          addToLog('📋 تم نسخ رابط التطبيق');
-                        }
-                        setShowMoreMenu(false);
-                      }}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors text-right w-full"
-                    >
-                      <Share2 size={16} className="text-purple-400" />
-                      <span>شارك التطبيق</span>
                     </button>
                   </div>
                 </motion.div>

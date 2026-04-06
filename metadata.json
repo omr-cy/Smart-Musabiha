@@ -1,5 +1,0 @@
-{
-  "name": "المسبحة الصوتية الذكية",
-  "description": "تطبيق مسبحة ذكي يستخدم تقنية التعرف على الصوت لعد الأذكار تلقائياً، مع دعم للعمل بدون إنترنت.",
-  "requestFramePermissions": ["microphone", "screen-wake-lock"]
-}
