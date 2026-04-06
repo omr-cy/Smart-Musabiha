@@ -44,7 +44,8 @@ import {
   Heart,
   LayoutGrid,
   Info,
-  Wrench
+  Wrench,
+  Share2
 } from 'lucide-react';
 import { Dhikr, INITIAL_DHIKRS, RecognitionMode } from './types';
 
@@ -921,6 +922,26 @@ export default function App() {
                     <button className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors text-right w-full">
                       <Wrench size={16} className="text-gold" />
                       <span>الدعم والتطوير</span>
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: 'المسبحة الصوتية الذكية',
+                            text: 'تطبيق مسبحة ذكي يستخدم تقنية التعرف على الصوت لعد الأذكار تلقائياً.',
+                            url: window.location.href,
+                          }).catch(console.error);
+                        } else {
+                          // Fallback: copy to clipboard
+                          navigator.clipboard.writeText(window.location.href);
+                          addToLog('📋 تم نسخ رابط التطبيق');
+                        }
+                        setShowMoreMenu(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-sm text-gray-300 hover:text-white transition-colors text-right w-full"
+                    >
+                      <Share2 size={16} className="text-purple-400" />
+                      <span>شارك التطبيق</span>
                     </button>
                   </div>
                 </motion.div>
